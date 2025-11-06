@@ -348,6 +348,7 @@ canvas {
     <h3>🐢 Jugando con <span id="selectedTurtleName"></span></h3>
     <button onclick="startGame()">🎮 Iniciar juego</button>
     <button onclick="openLeaderboard()">🏆 Ver puntuaciones</button>
+    <button onclick="backToSelectTurtle()">🐢 Volver a seleccionar personaje</button>
     
     <div class="controls-info">
       <h4>🎮 Controles</h4>
@@ -469,6 +470,24 @@ window.logoutUser = function(){
   document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
   showLogin();
+}
+
+window.backToSelectTurtle = function() {
+  // Detener el juego si está corriendo
+  running = false;
+  if(gameLoopId) {
+    cancelAnimationFrame(gameLoopId);
+    gameLoopId = null;
+  }
+  
+  // Volver a la pantalla de selección
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('selectScreen').classList.add('active');
+  
+  // Resetear la selección actual
+  selectedTurtle = null;
+  document.querySelectorAll('.turtle-option').forEach(div => div.classList.remove('selected'));
+  document.getElementById('confirmTurtle').disabled = true;
 }
 
 window.showGameScreen = function(){
