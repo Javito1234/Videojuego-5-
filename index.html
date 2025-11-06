@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐢 TMNT Runner</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #0b0b0b;
+  color: #fff;
+  text-align: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 🎯 BARRA DE NAVEGACIÓN - SIEMPRE VISIBLE */
+.navbar {
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  width: 100%;
+}
+
+.navbar-brand {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.navbar-menu a {
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: 0.3s;
+  font-weight: 500;
+}
+
+.navbar-menu a:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+/* Contenedor principal */
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 { 
+  margin-top: 20px; 
+  margin-bottom: 10px;
+}
+
+button {
+  background: #16a085;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover { 
+  background: #1abc9c; 
+  transform: scale(1.05);
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+.auth-screen, .game-screen, .select-screen {
+  display: none;
+}
+
+.active { 
+  display: block; 
+}
+
+.auth-container {
+  margin-top: 50px;
+}
+
+input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  width: 80%;
+  max-width: 300px;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #ff5555;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+canvas {
+  background: #111;
+  display: block;
+  margin: 20px auto;
+  border: 3px solid #16a085;
+  border-radius: 10px;
+  max-width: 100%;
+}
+
+.modal {
+  position: fixed; 
+  top: 0; 
+  left: 0;
+  width: 100%; 
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  justify-content: center; 
+  align-items: center;
+  z-index: 10000;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #222; 
+  padding: 20px; 
+  border-radius: 12px; 
+  width: 90%;
+  max-width: 400px;
+}
+
+.close {
+  float: right; 
+  cursor: pointer; 
+  color: #aaa; 
+  font-size: 28px;
+  line-height: 20px;
+}
+
+.close:hover { 
+  color: #fff; 
+}
+
+.turtle-option {
+  display: inline-block;
+  margin: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #222;
+  cursor: pointer;
+  width: 130px;
+  transition: 0.3s;
+  border: 3px solid transparent;
+}
+
+.turtle-option:hover { 
+  background: #333; 
+  transform: scale(1.05); 
+}
+
+.turtle-color {
+  width: 60px;
+  height: 10px;
+  margin: 8px auto;
+  border-radius: 5px;
+}
+
+.turtle-weapon {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+.turtle-option.selected {
+  border: 3px solid #1abc9c;
+  background: #2c3e50;
+}
+
+.controls-info {
+  margin-top: 15px;
+  padding: 15px;
+  background: #222;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.controls-info h4 {
+  margin-top: 0;
+  color: #16a085;
+}
+
+.control-key {
+  display: inline-block;
+  background: #333;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin: 0 5px;
+  font-weight: bold;
+  color: #1abc9c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .navbar-menu {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 🎯 BARRA DE NAVEGACIÓN - SIEMPRE VISIBLE -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    🐢 TMNT Runner
+  </div>
+  <div class="navbar-menu">
+    <a href="#" onclick="showGameScreen(); return false;">🎮 Jugar</a>
+    <a href="#" onclick="openLeaderboard(); return false;">🏆 Puntuaciones</a>
+    <a href="#" onclick="showAbout(); return false;">ℹ️ Acerca de</a>
+  </div>
+  <div class="navbar-user">
+    <div class="user-avatar" id="userAvatar">👤</div>
+    <span id="navUsername">Invitado</span>
+    <button onclick="logoutUser()" id="logoutBtn" style="display:none; padding: 6px 12px; font-size: 14px;">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Pantalla de login / registro -->
+  <div id="authScreen" class="auth-screen active">
+    <div class="auth-container">
+      <h1>🐢 Tortugas Ninja Runner 🐢</h1>
+      <p>¡Go Ninja, Go!</p>
+
+      <div id="loginForm">
+        <h2>Iniciar Sesión</h2>
+        <input type="text" id="loginUsername" placeholder="Usuario">
+        <input type="password" id="loginPassword" placeholder="Contraseña">
+        <button onclick="loginUser()">Entrar</button>
+        <p>¿No tienes cuenta? <a href="#" onclick="showRegister(); return false;" style="color: #16a085;">Regístrate</a></p>
+        <div id="loginError" class="error-message"></div>
+      </div>
+
+      <div id="registerForm" style="display:none;">
+        <h2>Registrarse</h2>
+        <input type="text" id="regUsername" placeholder="Usuario">
+        <input type="email" id="regEmail" placeholder="Correo electrónico">
+        <input type="password" id="regPassword" placeholder="Contraseña (mínimo 6 caracteres)">
+        <button onclick="registerUser()">Registrarse</button>
+        <p>¿Ya tienes cuenta? <a href="#" onclick="showLogin(); return false;" style="color: #16a085;">Inicia sesión</a></p>
+        <div id="registerError" class="error-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú de selección de tortuga -->
+  <div id="selectScreen" class="select-screen">
+    <h2>Selecciona tu Tortuga Ninja</h2>
+    <div id="turtleSelection">
+      <div class="turtle-option" onclick="selectTurtle('leonardo')">
+        <h3>Leonardo</h3>
+        <div class="turtle-color" style="background:#1e90ff;"></div>
+        <div class="turtle-weapon">⚔️ Katanas</div>
+        <div style="font-size:11px; margin-top:8px; color:#aaa;">Habilidad X: Corta obstáculos</div>
+      </div>
+      <div class="turtle-option" onclick="selectTurtle('raphael')">
+        <h3>Raphael</h3>
+        <div class="turtle-color" style="background:#ff0000;"></div>
+        <div class="turtle-weapon">🔱 Sais</div>
+        <div style="font-size:11px; margin-top:8px; color:#aaa;">Habilidad X: Destruye todo</div>
+      </div>
+      <div class="turtle-option" onclick="selectTurtle('donatello')">
+        <h3>Donatello</h3>
+        <div class="turtle-color" style="background:#9370db;"></div>
+        <div class="turtle-weapon">🥋 Bo</div>
+        <div style="font-size:11px; margin-top:8px; color:#aaa;">Habilidad X: Desintegra</div>
+      </div>
+      <div class="turtle-option" onclick="selectTurtle('michelangelo')">
+        <h3>Michelangelo</h3>
+        <div class="turtle-color" style="background:#ff7300;"></div>
+        <div class="turtle-weapon">⛓️ Nunchakus</div>
+        <div style="font-size:11px; margin-top:8px; color:#aaa;">Habilidad X: Mega salto</div>
+      </div>
+    </div>
+    <button id="confirmTurtle" disabled onclick="confirmTurtle()">Confirmar selección</button>
+  </div>
+
+  <!-- Pantalla del juego -->
+  <div id="gameScreen" class="game-screen">
+    <h2>Bienvenido, <span id="playerName"></span></h2>
+    <h3>🐢 Jugando con <span id="selectedTurtleName"></span></h3>
+    <button onclick="startGame()">🎮 Iniciar juego</button>
+    <button onclick="openLeaderboard()">🏆 Ver puntuaciones</button>
+    
+    <div class="controls-info">
+      <h4>🎮 Controles</h4>
+      <p><span class="control-key">ESPACIO</span> = Saltar | <span class="control-key">X</span> = Habilidad especial</p>
+    </div>
+    
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+  </div>
+</div>
+
+<!-- Modal de puntuaciones -->
+<div id="leaderboardModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeLeaderboard()">×</span>
+    <h3>🏆 Top 10 Jugadores</h3>
+    <div id="leaderboardList"></div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let selectedTurtle = null;
+let users = [];
+let canvas, ctx;
+let player, obstacles = [], score = 0, running = false, lastTime = 0, spawnTimer = 0;
+let speed = 0.35;
+let baseSpawnInterval = 1200;
+let minSpawnInterval = 600;
+let gameLoopId = null;
+
+const turtles = {
+  leonardo: { name:'Leonardo', bandana:'#1e90ff', weapon: 'Katanas', cooldown: 5 },
+  raphael: { name:'Raphael', bandana:'#ff0000', weapon: 'Sais', cooldown: 6 },
+  donatello: { name:'Donatello', bandana:'#9370db', weapon: 'Bo', cooldown: 4 },
+  michelangelo: { name:'Michelangelo', bandana:'#ff7300', weapon: 'Nunchakus', cooldown: 3 }
+};
+
+let abilityCooldown = 0;
+
+function loadUsers() { users = []; }
+function saveUsers() { }
+
+window.showRegister = function(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('registerForm').style.display='block';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('registerError').textContent = '';
+}
+
+window.showLogin = function(){
+  document.getElementById('registerForm').style.display='none';
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('registerError').textContent = '';
+}
+
+window.registerUser = function(){
+  const u=document.getElementById('regUsername').value.trim();
+  const e=document.getElementById('regEmail').value.trim();
+  const p=document.getElementById('regPassword').value.trim();
+  
+  if(!u||!e||!p){ 
+    document.getElementById('registerError').textContent='❌ Completa todos los campos'; 
+    return; 
+  }
+  if(p.length<6){ 
+    document.getElementById('registerError').textContent='❌ Contraseña mínima de 6 caracteres'; 
+    return; 
+  }
+  if(users.find(x=>x.username===u)){ 
+    document.getElementById('registerError').textContent='❌ Usuario ya existe'; 
+    return; 
+  }
+  
+  users.push({username:u,email:e,password:p,bestScore:0});
+  saveUsers();
+  alert('✅ Registro exitoso. Ahora inicia sesión.');
+  showLogin();
+}
+
+window.loginUser = function(){
+  const u=document.getElementById('loginUsername').value.trim();
+  const p=document.getElementById('loginPassword').value.trim();
+  
+  if(!u || !p) {
+    document.getElementById('loginError').textContent='❌ Completa todos los campos';
+    return;
+  }
+  
+  const user = users.find(x=>x.username===u && x.password===p);
+  if(!user){ 
+    document.getElementById('loginError').textContent='❌ Usuario o contraseña incorrecta'; 
+    return; 
+  }
+  
+  currentUser = users.indexOf(user);
+  document.getElementById('playerName').textContent = u;
+  document.getElementById('navUsername').textContent = u;
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+  
+  document.getElementById('authScreen').classList.remove('active');
+  document.getElementById('selectScreen').classList.add('active');
+}
+
+window.logoutUser = function(){
+  currentUser = null;
+  selectedTurtle = null;
+  running = false;
+  if(gameLoopId) {
+    cancelAnimationFrame(gameLoopId);
+    gameLoopId = null;
+  }
+  
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('navUsername').textContent = 'Invitado';
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('selectScreen').classList.remove('active');
+  document.getElementById('authScreen').classList.add('active');
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  showLogin();
+}
+
+window.showGameScreen = function(){
+  if(currentUser === null) {
+    alert('⚠️ Debes iniciar sesión primero');
+    return;
+  }
+  if(!selectedTurtle) {
+    document.getElementById('selectScreen').classList.add('active');
+    document.getElementById('gameScreen').classList.remove('active');
+    return;
+  }
+  document.getElementById('selectScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+}
+
+window.showAbout = function(){
+  alert('🐢 TMNT Runner v1.0\n\nJuego estilo Chrome Dino con las Tortugas Ninja.\n\nControles:\n- ESPACIO: Saltar\n- X: Habilidad especial\n\nCada tortuga tiene habilidades únicas.\n¡Diviértete!');
+}
+
+window.selectTurtle = function(name){
+  selectedTurtle = turtles[name];
+  document.querySelectorAll('.turtle-option').forEach(div=>div.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('confirmTurtle').disabled = false;
+}
+
+window.confirmTurtle = function(){
+  if(!selectedTurtle) return;
+  document.getElementById('selectedTurtleName').textContent = selectedTurtle.name;
+  document.getElementById('selectScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+  initCanvas();
+}
+
+function initCanvas() {
+  canvas = document.getElementById('gameCanvas');
+  if(!canvas) return;
+  ctx = canvas.getContext('2d');
+  
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.font = '24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Presiona "Iniciar juego" para comenzar', canvas.width/2, canvas.height/2);
+}
+
+function startGame(){
+  if(!canvas || !ctx) initCanvas();
+  
+  player = {
+    x:50, y:310, width:50, height:50, vy:0,
+    gravity:0.0018, jump:-0.6, onGround:true,
+    color:'#2ecc71', bandana:selectedTurtle ? selectedTurtle.bandana : '#ff7300'
+  };
+  
+  obstacles = [];
+  score = 0;
+  running = true;
+  lastTime = performance.now();
+  spawnTimer = 0;
+  speed = 0.35;
+  abilityCooldown = 0;
+  
+  if(gameLoopId) cancelAnimationFrame(gameLoopId);
+  gameLoopId = requestAnimationFrame(loop);
+}
+
+function jump() { 
+  if(player && player.onGround && running) { 
+    player.vy = player.jump; 
+    player.onGround = false; 
+  } 
+}
+
+function useAbility() {
+  if(!running || abilityCooldown > 0) return;
+  
+  const turtleName = Object.keys(turtles).find(key => turtles[key] === selectedTurtle);
+  
+  switch(turtleName) {
+    case 'leonardo':
+      if(obstacles.length > 0) { obstacles.shift(); score += 5; }
+      break;
+    case 'raphael':
+      if(obstacles.length > 0) { obstacles.length = 0; score += 10; }
+      break;
+    case 'donatello':
+      if(obstacles.length > 0) { obstacles.shift(); score += 8; }
+      break;
+    case 'michelangelo':
+      if(player.onGround) { player.vy = player.jump * 1.8; player.onGround = false; }
+      break;
+  }
+  
+  abilityCooldown = selectedTurtle.cooldown;
+}
+
+document.addEventListener('keydown', e => { 
+  if(e.code === 'Space' || e.code === 'ArrowUp') { 
+    e.preventDefault(); 
+    jump(); 
+  }
+  if(e.code === 'KeyX') {
+    e.preventDefault();
+    useAbility();
+  }
+});
+
+function getMinObstacleDistance() {
+  return 200 + (speed * 400);
+}
+
+function canSpawnObstacle() {
+  if(obstacles.length === 0) return true;
+  const lastObstacle = obstacles[obstacles.length - 1];
+  const minDistance = getMinObstacleDistance();
+  const distanceFromLast = canvas.width - (lastObstacle.x + lastObstacle.width);
+  return distanceFromLast >= minDistance;
+}
+
+function spawnObstacle(){
+  if(!canSpawnObstacle()) return;
+  const h = 20 + Math.random() * 40;
+  obstacles.push({
+    x: canvas.width, 
+    y: canvas.height - 40 - h, 
+    width: 20 + Math.random() * 30, 
+    height: h, 
+    color: '#e74c3c'
+  }); 
+}
+
+function collides(a, b) { 
+  return a.x < b.x + b.width && 
+         a.x + a.width > b.x && 
+         a.y < b.y + b.height && 
+         a.y + a.height > b.y; 
+}
+
+function drawGame(){
+  ctx.fillStyle = '#111'; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#444'; 
+  ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+  
+  ctx.fillStyle = player.color; 
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  ctx.fillStyle = '#27ae60';
+  ctx.beginPath();
+  ctx.ellipse(player.x + player.width/2, player.y + player.height/2, player.width*0.6, player.height*0.45, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = player.bandana; 
+  ctx.fillRect(player.x + 5, player.y + 5, player.width - 10, 10);
+  
+  obstacles.forEach(o => { 
+    ctx.fillStyle = o.color; 
+    ctx.fillRect(o.x, o.y, o.width, o.height); 
+  });
+  
+  ctx.fillStyle = '#fff'; 
+  ctx.font = '20px Arial'; 
+  ctx.textAlign = 'left';
+  ctx.fillText('Puntaje: ' + Math.floor(score), 12, 28);
+  ctx.font = '16px Arial';
+  ctx.fillText(selectedTurtle.name, 12, 52);
+  
+  const barX = 12, barY = 60, barW = 120, barH = 8;
+  ctx.fillStyle = '#333';
+  ctx.fillRect(barX, barY, barW, barH);
+  
+  const pct = Math.max(0, 1 - abilityCooldown / selectedTurtle.cooldown);
+  ctx.fillStyle = pct >= 1 ? '#2ecc71' : '#f1c40f';
+  ctx.fillRect(barX, barY, barW * pct, barH);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX, barY, barW, barH);
+  
+  if(abilityCooldown > 0) {
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px Arial';
+    ctx.fillText(abilityCooldown.toFixed(1) + 's', barX + barW + 8, barY + barH);
+  } else {
+    ctx.fillStyle = '#2ecc71';
+    ctx.font = '12px Arial';
+    ctx.fillText('¡Listo! (X)', barX + barW + 8, barY + barH);
+  }
+}
+
+function gameOver(){
+  running = false;
+  if(currentUser !== null && score > users[currentUser].bestScore) { 
+    users[currentUser].bestScore = Math.floor(score); 
+    saveUsers(); 
+  }
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.font = '32px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('💥 Game Over!', canvas.width/2, canvas.height/2 - 30);
+  ctx.font = '24px Arial';
+  ctx.fillText('Puntaje: ' + Math.floor(score), canvas.width/2, canvas.height/2 + 10);
+  ctx.font = '16px Arial';
+  ctx.fillText('Presiona "Iniciar juego" para volver a jugar', canvas.width/2, canvas.height/2 + 50);
+}
+
+function loop(ts){
+  if(!running) return;
+  const dt = ts - lastTime; 
+  lastTime = ts;
+  
+  player.vy += player.gravity * dt;
+  player.y += player.vy * dt;
+  
+  if(player.y + player.height >= canvas.height - 40) { 
+    player.y = canvas.height - 40 - player.height; 
+    player.vy = 0; 
+    player.onGround = true; 
+  } else {
+    player.onGround = false;
+  }
+  
+  if(abilityCooldown > 0) {
+    abilityCooldown -= dt / 1000;
+    if(abilityCooldown < 0) abilityCooldown = 0;
+  }
+  
+  spawnTimer += dt;
+  const currentSpawnInterval = Math.max(minSpawnInterval, baseSpawnInterval - (speed * 400));
+  
+  if(spawnTimer > currentSpawnInterval) { 
+    spawnTimer = 0; 
+    spawnObstacle(); 
+  }
+  
+  for(let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].x -= speed * dt;
+    if(obstacles[i].x + obstacles[i].width < 0) {
+      obstacles.splice(i, 1);
+    } else if(collides(player, obstacles[i])) {
+      gameOver();
+      return;
+    }
+  }
+  
+  score += dt * 0.02;
+  speed += 0.00008;
+  drawGame();
+  if(running) gameLoopId = requestAnimationFrame(loop);
+}
+
+window.openLeaderboard = function(){
+  const div = document.getElementById('leaderboardList');
+  div.innerHTML = '';
+  let sorted = [...users].sort((a,b) => b.bestScore - a.bestScore).slice(0, 10);
+  
+  if(sorted.length === 0) {
+    div.innerHTML = '<p style="color: #aaa;">No hay puntuaciones aún</p>';
+  } else {
+    sorted.forEach((u, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+      div.innerHTML += `<p>${medal} ${i+1}. ${u.username} - ${u.bestScore} pts</p>`;
+    });
+  }
+  
+  document.getElementById('leaderboardModal').classList.add('show');
+}
+
+window.closeLeaderboard = function() { 
+  document.getElementById('leaderboardModal').classList.remove('show');
+}
+
+window.addEventListener('load', function() {
+  loadUsers();
+  console.log('🐢 TMNT Runner cargado - LA NAVBAR ESTÁ ARRIBA 👆');
+});
+</script>
+
+</body>
+</html>
